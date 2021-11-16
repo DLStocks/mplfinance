@@ -273,6 +273,9 @@ def _valid_plot_kwargs():
 
         'warn_too_much_data'        : { 'Default'     : 599,
                                         'Validator'   : lambda value: isinstance(value,int) },
+        
+        'orders'                    : { 'Default'     : None,
+                                        'Validator'   : lambda value: isinstance(value,np.ndarray) and len(value) > 0 }
     }
 
     _validate_vkwargs_dict(vkwargs)
@@ -331,6 +334,8 @@ def plot( data, **kwargs ):
         style = config['ax'].mpfstyle
     elif style is None:
         style = 'default'
+
+    orders = config['orders']
 
     if isinstance(style,str):
         style = _styles._get_mpfstyle(style)
@@ -398,7 +403,7 @@ def plot( data, **kwargs ):
         lw = config['_width_config']['line_width']
         axA1.plot(xdates, closes, color=config['linecolor'], linewidth=lw)
     else:
-        collections =_construct_mpf_collections(ptype,dates,xdates,opens,highs,lows,closes,volumes,config,style)
+        collections =_construct_mpf_collections(ptype,dates,xdates,opens,highs,lows,closes,volumes,config,style,orders=orders)
 
     if ptype in VALID_PMOVE_TYPES:
         collections, calculated_values = collections

@@ -19,8 +19,9 @@ from mplfinance._arg_validators import _xlim_validator, _is_datelike
 from mplfinance._styles         import _get_mpfstyle
 
 from six.moves import zip
+from random import randint
 
-def _check_input(opens, closes, highs, lows):
+def _check_input(opens, closes, highs, lows, orders=None):
     """Checks that *opens*, *highs*, *lows* and *closes* have the same length.
     NOTE: this code assumes if any value open, high, low, close is
     missing (*-1*) they all are missing
@@ -45,6 +46,10 @@ def _check_input(opens, closes, highs, lows):
     same_length = len(opens) == len(highs) == len(lows) == len(closes)
     if not same_length:
         raise ValueError('O,H,L,C must have the same length!')
+    if orders:
+        same_length = len(opens) == len(highs) == len(lows) == len(closes) == len(orders)
+    if not same_length:
+        raise ValueError('O,H,L,C must have the same length as orders!')
 
     o = np.where(np.isnan(opens))[0]
     h = np.where(np.isnan(highs))[0]
@@ -85,11 +90,11 @@ def _check_and_convert_xlim_configuration(data, config):
     return xlim
 
 
-def _construct_mpf_collections(ptype,dates,xdates,opens,highs,lows,closes,volumes,config,style):
+def _construct_mpf_collections(ptype,dates,xdates,opens,highs,lows,closes,volumes,config,style,orders=None):
     collections = None
     if ptype == 'candle' or ptype == 'candlestick':
         collections = _construct_candlestick_collections(xdates, opens, highs, lows, closes,
-                                                         marketcolors=style['marketcolors'],config=config )
+                                                         marketcolors=style['marketcolors'],config=config,orders=orders)
 
     elif ptype =='hollow_and_filled':
             collections = _construct_hollow_candlestick_collections(xdates, opens, highs, lows, closes,
@@ -187,6 +192,12 @@ def _updown_colors(upcolor,downcolor,opens,closes,use_prev_close=False):
         _list = [ cmap[pre < cls] for cls,pre in zip(closes[1:], closes) ]
         return [first] + _list
 
+def _order_colors(buycolor,sellcolor,orders,cur_colors):
+    for i in range(len(orders)):
+        if orders[i] == -1:
+            cur_colors[i] = sellcolor
+        elif orders[i] == 1:
+            cur_colors[i] = buycolor
 
 def _updownhollow_colors(upcolor,downcolor,hollowcolor,opens,closes):
     if upcolor == downcolor:
@@ -525,7 +536,7 @@ def _construct_ohlc_collections(dates, opens, highs, lows, closes, marketcolors=
     return [rangeCollection, openCollection, closeCollection]
 
 
-def _construct_candlestick_collections(dates, opens, highs, lows, closes, marketcolors=None, config=None):
+def _construct_candlestick_collections(dates, opens, highs, lows, closes, marketcolors=None, config=None, orders=None):
     """Represent the open, close as a bar line and high low range as a
     vertical line.
 
@@ -580,10 +591,13 @@ def _construct_candlestick_collections(dates, opens, highs, lows, closes, market
     rangeSegments = rangeSegLow + rangeSegHigh
 
     alpha  = marketcolors['alpha']
-
     uc     = mcolors.to_rgba(marketcolors['candle'][ 'up' ], alpha)
     dc     = mcolors.to_rgba(marketcolors['candle']['down'], alpha)
     colors = _updown_colors(uc, dc, opens, closes)
+    if type(orders) != type(None):
+        buyc     = mcolors.to_rgba(marketcolors['order']['buy'], alpha)
+        sellc    = mcolors.to_rgba(marketcolors['order']['sell'], alpha)
+        _order_colors(buyc, sellc, orders, colors)
 
     uc     = mcolors.to_rgba(marketcolors['edge'][ 'up' ], 1.0)
     dc     = mcolors.to_rgba(marketcolors['edge']['down'], 1.0)

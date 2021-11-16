@@ -5,6 +5,7 @@ style = dict(style_name    = 'classic',
                               'wick'    : {'up':'k', 'down':'k'},
                               'ohlc'    : {'up':'k', 'down':'k'},
                               'volume'  : {'up':'#181818', 'down':'#181818'},
+                              'order'  : {'buy': '#00b060', 'sell': '#fe3032'},
                               'vcedge'  : {'up':'#181818', 'down':'#181818'},
                               'vcdopcod': False, # Volume Color is Per Price Change On Day
                               'alpha'   : 0.9,
